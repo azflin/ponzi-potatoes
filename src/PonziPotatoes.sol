@@ -6,9 +6,13 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+error NonExistentTokenURI();
 
 contract PonziPotatoes is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
+    using Strings for uint256;
 
     Counters.Counter private _tokenIdCounter;
     string public constant ponziPotatoesURL = "https://ponzipotatoes.com/api";
@@ -31,7 +35,6 @@ contract PonziPotatoes is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
     }
 
     // The following functions are overrides required by Solidity.
@@ -48,7 +51,10 @@ contract PonziPotatoes is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function tokenURI(uint256 tokenId) public view override (ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
+        if (ownerOf(tokenId) == address(0)) {
+            revert NonExistentTokenURI();
+        }
+        return string(abi.encodePacked("https://ponzipotatoes.com/api", tokenId.toString()));
     }
 
     function supportsInterface(bytes4 interfaceId) public view override (ERC721, ERC721Enumerable) returns (bool) {
